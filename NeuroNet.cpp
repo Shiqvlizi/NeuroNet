@@ -80,7 +80,7 @@ void randomizeMatrix(std::vector<std::vector<double>>& a)
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
-	double limit = sqrt(6 / width);
+	double limit = sqrt(6.0 / width);
 
 	std::uniform_real_distribution<double> dist(-limit, limit);
 
@@ -93,14 +93,14 @@ void randomizeMatrix(std::vector<std::vector<double>>& a)
 	}
 }
 
-std::vector<double> NeuroCalc(std::vector<double> input, std::vector<std::vector<std::vector<double>>> weightMatrixs, std::vector<std::vector<double>> biasMatrixs)
+std::vector<double> NeuroCalc(const std::vector<double>& input, const std::vector<std::vector<std::vector<double>>>& weightMatrixs, const std::vector<std::vector<double>>& biasMatrixs)
 {
 	int depth = biasMatrixs.size();
 
 	std::vector<double> res = matrixAdd(matrixMultiply(weightMatrixs[0], input), biasMatrixs[0]);
 	for (int i = 1; i < depth; i++)
 	{
-		res = matrixAdd(matrixMultiply(weightMatrixs[i], res), biasMatrixs[i]); 
+		res = matrixAdd(matrixMultiply(weightMatrixs[i], res), biasMatrixs[i]);
 	}
 	return res;
 }
@@ -144,17 +144,20 @@ int main()
 
 	for (int layer = 0; layer < notOutputLayers; layer++)
 	{
+		biasMatrixs[layer].resize(layerWidths[layer + 1]);
 
-		weightMatrixs[layer].resize(layerWidths[layer] + 1);
-		for (int i = 0; i < layerWidths[layer] + 1; i++)
+		weightMatrixs[layer].resize(layerWidths[layer + 1]);
+		for (int i = 0; i < layerWidths[layer+1]; i++)
 		{
-
 			weightMatrixs[layer][i].resize(layerWidths[layer]);
 		}
 		randomizeMatrix(weightMatrixs[layer]);
-
 	}
 
+	std::vector<double> ans(1, 0);
+	std::vector<double> input = { 2,3,1,0,0,0 };
+	ans = NeuroCalc(input, weightMatrixs, biasMatrixs);
+	std::print("{}", ans);
 
 
 }
