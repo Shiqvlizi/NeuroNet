@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="NeuroNet.vcxproj" />
+  <Project Path="NeuroNet.vcxproj" Id="e430f1fb-4c83-47cd-86e5-199149c575a3" />
 </Solution>
