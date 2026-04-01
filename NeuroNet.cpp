@@ -73,6 +73,14 @@ double ReLU(double x)
 	return std::max(0.0, x);
 }
 
+std::vector<double> ReLU(std::vector<double> x)
+{
+	for (double& i : x)
+	{
+		i = ReLU(i);
+	}
+}
+
 void randomizeMatrix(matrix<double>& a)
 {
 	int height = a.size();
@@ -98,11 +106,14 @@ std::vector<double> NeuroCalc(const std::vector<double>& input, const std::vecto
 {
 	int depth = biasMatrixs.size();
 
-	std::vector<double> res = matrixAdd(matrixMultiply(weightMatrixs[0], input), biasMatrixs[0]);
-	for (int i = 1; i < depth; i++)
+	std::vector<double> res = input;
+	for (int i = 0; i < depth - 1; i++)
 	{
-		res = matrixAdd(matrixMultiply(weightMatrixs[i], res), biasMatrixs[i]);
+		res = ReLU(matrixAdd(matrixMultiply(weightMatrixs[i], res), biasMatrixs[i]));
 	}
+
+	res = matrixAdd(matrixMultiply(weightMatrixs[depth - 1], res), biasMatrixs[depth - 1]);
+
 	return res;
 }
 
@@ -148,7 +159,7 @@ int main()
 		biasMatrixs[layer].resize(layerWidths[layer + 1]);
 
 		weightMatrixs[layer].resize(layerWidths[layer + 1]);
-		for (int i = 0; i < layerWidths[layer+1]; i++)
+		for (int i = 0; i < layerWidths[layer + 1]; i++)
 		{
 			weightMatrixs[layer][i].resize(layerWidths[layer]);
 		}
