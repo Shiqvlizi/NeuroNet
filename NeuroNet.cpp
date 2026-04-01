@@ -73,12 +73,14 @@ double ReLU(double x)
 	return std::max(0.0, x);
 }
 
-std::vector<double> ReLU(std::vector<double> x)
+std::vector<double> ReLU(const std::vector<double>& x)
 {
-	for (double& i : x)
+	std::vector<double>res = x;
+	for (double& i : res)
 	{
 		i = ReLU(i);
 	}
+	return res;
 }
 
 void randomizeMatrix(matrix<double>& a)
