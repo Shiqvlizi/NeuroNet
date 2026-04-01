@@ -7,14 +7,15 @@
 #include <cmath>
 
 
-
+template<typename T>
+using matrix = std::vector<std::vector<T>>;
 
 
 // 矩阵乘法
-std::vector<std::vector<double>> matrixMultiply(const std::vector<std::vector<double>>& a, const std::vector<std::vector<double>>& b)
+matrix<double> matrixMultiply(const matrix<double>& a, const matrix<double>& b)
 {
 	int widthA = a[0].size(), heightA = a.size(), widthB = b[0].size(), heightB = b.size();
-	std::vector<std::vector<double>> res(heightA, std::vector<double>(widthB, 0.0));
+	matrix<double> res(heightA, std::vector<double>(widthB, 0.0));
 	if (widthA == heightB)
 	{
 		for (int i = 0; i < heightA; i++)
@@ -35,7 +36,7 @@ std::vector<std::vector<double>> matrixMultiply(const std::vector<std::vector<do
 	}
 }
 
-std::vector<double> matrixMultiply(const std::vector<std::vector<double>>& weight, const std::vector<double>& input)
+std::vector<double> matrixMultiply(const matrix<double>& weight, const std::vector<double>& input)
 {
 	int  heightInput = input.size(), widthWeight = weight[0].size(), heightWeight = weight.size();
 	std::vector<double> res(heightWeight, 0.0);
@@ -72,7 +73,7 @@ double ReLU(double x)
 	return std::max(0.0, x);
 }
 
-void randomizeMatrix(std::vector<std::vector<double>>& a)
+void randomizeMatrix(matrix<double>& a)
 {
 	int height = a.size();
 	int width = a[0].size();
@@ -93,7 +94,7 @@ void randomizeMatrix(std::vector<std::vector<double>>& a)
 	}
 }
 
-std::vector<double> NeuroCalc(const std::vector<double>& input, const std::vector<std::vector<std::vector<double>>>& weightMatrixs, const std::vector<std::vector<double>>& biasMatrixs)
+std::vector<double> NeuroCalc(const std::vector<double>& input, const std::vector<matrix<double>>& weightMatrixs, const std::vector<std::vector<double>>& biasMatrixs)
 {
 	int depth = biasMatrixs.size();
 
@@ -133,7 +134,7 @@ int notOutputLayers = layerWidths.size() - 1;
 // weightMatrix[0], 是一个二维
 
 
-std::vector<std::vector<std::vector<double>>> weightMatrixs(notOutputLayers);
+std::vector<matrix<double>> weightMatrixs(notOutputLayers);
 std::vector<std::vector<double>> biasMatrixs(notOutputLayers);
 
 
