@@ -11,7 +11,42 @@ template<typename T>
 using matrix = std::vector<std::vector<T>>;
 
 
+
+double learnRate = 0.01;
+
+std::vector<int> layerWidths = { 6,64,32,1 }; // 输入, ..., 输出
+int notOutputLayers = layerWidths.size() - 1;
+int outputHeight = layerWidths[layerWidths.size() - 1];
+
+// weightMatrix[层][行][列]
+// weightMatrix[0], 是一个二维
+
+
+std::vector<matrix<double>> weightMatrixs(notOutputLayers);
+std::vector<std::vector<double>> biasMatrixs(notOutputLayers);
+
+std::vector<matrix<double>> weightDiffMatrixs(notOutputLayers);
+std::vector<std::vector<double>> biasDiffMatrixs(notOutputLayers);
+
+
+std::vector<std::vector<double>> rawInput(notOutputLayers);
+std::vector<std::vector<double>> Input(notOutputLayers);
+
+
+// 假设是第 l 层
+//
+//
+// ... ----------->				  Input[l]									       ------------------------->   Input[l+1]		
+//              weightMatrixs[l]           +   biasMatrixs[l]   ->  rawInput[l] ---		     weightMatrixs[l]                 +   ....
+//
+//
+
+
+
+
 // 矩阵乘法
+
+// AB
 matrix<double> matrixMultiply(const matrix<double>& a, const matrix<double>& b)
 {
 	int widthA = a[0].size(), heightA = a.size(), widthB = b[0].size(), heightB = b.size();
@@ -36,6 +71,8 @@ matrix<double> matrixMultiply(const matrix<double>& a, const matrix<double>& b)
 	}
 }
 
+
+// Ax
 std::vector<double> matrixMultiply(const matrix<double>& weight, const std::vector<double>& input)
 {
 	int  heightInput = input.size(), widthWeight = weight[0].size(), heightWeight = weight.size();
@@ -66,6 +103,118 @@ std::vector<double> matrixAdd(const std::vector<double>& a, const std::vector<do
 		res[i] = a[i] + b[i];
 	}
 	return res;
+}
+std::vector<double> matrixMinus(const std::vector<double>& a, const std::vector<double>& b)
+{
+	int height = a.size();
+	std::vector<double> res(height, 0);
+	for (int i = 0; i < height; i++)
+	{
+		res[i] = a[i] - b[i];
+	}
+	return res;
+
+
+}
+matrix<double> matrixMinus(const matrix<double>& a, const matrix<double>& b)
+{
+	int height = a.size();
+	int width = a[0].size();
+	matrix<double> res(height, std::vector<double>(width, 0));
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			res[i][j] = a[i][j] - b[i][j]
+				;
+		}
+	}
+	return res;
+}
+std::vector<double> matrixMultiply_Num(double a, const std::vector<double>& b)
+{
+	int height = b.size();
+	std::vector<double> res(height, 0);
+	for (int i = 0; i < height; i++)
+	{
+		res[i] = b[i] * a;
+	}
+	return res;
+}
+
+
+matrix<double> matrixMultiply_Num(double a, const matrix<double>& b)
+{
+	int height = b.size();
+	int width = b[0].size();
+
+	matrix<double> res(height, std::vector<double>(width, 0));
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			res[i][j] = a * b[i][j];
+		}
+	}
+	return res;
+}
+
+matrix<double> outerProduct(const std::vector<double>& a, const std::vector<double>& b)
+{
+	matrix<double> res(a.size(), std::vector<double>(b.size() - 1, 0));
+	for (int i = 0; i < a.size(); i++)
+	{
+		for (int j = 0; j < b.size(); j++)
+		{
+			res[i][j] = a[i] * b[j];
+		}
+	}
+	return res;
+}
+
+//matrix<double> outerProduct(const std::vector<double>& a, const std::vector<double>& b)
+//{
+//	matrix<double> res(a.size(), std::vector<double>(b.size() - 1, 0));
+//	for (int i = 0; i < a.size(); i++)
+//	{
+//		for (int j = 0; j < b.size(); j++)
+//		{
+//			res[i][j] = a[i] * b[j];
+//		}
+//	}
+//	return res;
+//}
+
+
+std::vector<double> hadamardProduct(const std::vector<double>& a, const std::vector<double>& b)
+{
+	std::vector<double> res(a.size(), 0);
+	for (int i = 0; i < a.size(); i++)
+	{
+		res[i] = a[i] * b[i];
+	}
+	return res;
+}
+
+
+
+
+matrix<double> transpose(const matrix<double>& x)
+{
+
+	int height = x[0].size();
+	int width = x.size();
+	matrix<double> res(height, std::vector<double>(width, 0));
+	for (int i = 0; i < width; i++)
+	{
+		for (int j = 0; j < height; j++)
+		{
+			res[j][i] = x[i][j];
+		}
+	}
+
+	return res;
+
 }
 
 double ReLU(double x)
@@ -119,20 +268,7 @@ void randomizeMatrix(matrix<double>& a)
 	}
 }
 
-std::vector<double> NeuroCalc(const std::vector<double>& input, const std::vector<matrix<double>>& weightMatrixs, const std::vector<std::vector<double>>& biasMatrixs)
-{
-	int depth = biasMatrixs.size();
 
-	std::vector<double> res = input;
-	for (int i = 0; i < depth - 1; i++)
-	{
-		res = ReLU(matrixAdd(matrixMultiply(weightMatrixs[i], res), biasMatrixs[i]));
-	}
-
-	res = matrixAdd(matrixMultiply(weightMatrixs[depth - 1], res), biasMatrixs[depth - 1]);
-
-	return res;
-}
 
 
 std::vector<double> NeuroCalc(
@@ -192,14 +328,53 @@ double loss(std::vector<double> NeuroNet_output, std::vector<double> train_outpu
 
 void backPropagate(std::vector<double> trainInput, std::vector<double> neuroOutput, std::vector<double> rightOutput)
 {
+
 	NeuroCalc(trainInput, weightMatrixs, biasMatrixs, rawInput, Input);
 
-	int l = notOutputLayers - 1;
+
+	std::vector<double> delta = matrixMultiply_Num((2.0 / layerWidths.back()), matrixMinus(rawInput.back(), rightOutput));
+
+	int layerCnt = layerWidths.size() - 2;
+
+	weightDiffMatrixs[layerCnt] = outerProduct(delta, Input[layerCnt]);
+
+
+	biasDiffMatrixs[layerCnt] = delta;
+
+	weightMatrixs[layerCnt] = matrixMinus(weightMatrixs[layerCnt], matrixMultiply_Num(learnRate, weightDiffMatrixs[layerCnt]));
+
+	biasMatrixs[layerCnt] = matrixMinus(biasMatrixs[layerCnt], matrixMultiply_Num(learnRate, biasDiffMatrixs[layerCnt]));
+
+	for (int i = layerCnt - 1; i >= 0; i--)
+	{
+
+		// 求 delta_i
+		delta = hadamardProduct(matrixMultiply(transpose(weightMatrixs[i + 1]), delta), dReLU(rawInput[i]));
+
+
+		weightDiffMatrixs[i] = outerProduct(delta, Input[i]);
+
+
+		biasDiffMatrixs[i] = delta;
+
+		weightMatrixs[i] = matrixMinus(weightMatrixs[i], matrixMultiply_Num(learnRate, weightDiffMatrixs[i]));
+
+		biasMatrixs[i] = matrixMinus(biasMatrixs[i], matrixMultiply_Num(learnRate, biasDiffMatrixs[i]));
+
+
+
+	}
+
+
+
+
+
+	/*int l = notOutputLayers - 1;
 
 	int height = weightDiffMatrixs[l].size();
 	int width = weightDiffMatrixs[l][0].size();
 
-	double errReuse;
+
 
 	for (int i = 0; i < height; i++)
 	{
@@ -211,15 +386,11 @@ void backPropagate(std::vector<double> trainInput, std::vector<double> neuroOutp
 		{
 			weightDiffMatrixs[l][i][j] = err * Input[l][j];
 		}
-	}
-
-
-
-
-	for (int l = notOutputLayers - 2; l >= 0; l--)
+	}*/
+	/*for (int l = notOutputLayers - 2; l >= 0; l--)
 	{
 
-	}
+	}*/
 
 }
 
@@ -237,23 +408,6 @@ void backPropagate(std::vector<double> trainInput, std::vector<double> neuroOutp
 
 
 
-std::vector<int> layerWidths = { 6,64,32,1 };
-int notOutputLayers = layerWidths.size() - 1;
-int outputHeight = layerWidths[notOutputLayers]; // 这里取巧了, 数值恰好能复用而已
-
-// weightMatrix[层][行][列]
-// weightMatrix[0], 是一个二维
-
-
-std::vector<matrix<double>> weightMatrixs(notOutputLayers);
-std::vector<std::vector<double>> biasMatrixs(notOutputLayers);
-
-std::vector<matrix<double>> weightDiffMatrixs(notOutputLayers);
-std::vector<std::vector<double>> biasDiffMatrixs(notOutputLayers);
-
-
-std::vector<std::vector<double>> rawInput(notOutputLayers);
-std::vector<std::vector<double>> Input(notOutputLayers); // 这里貌似需要 -1 ?
 
 int main()
 {
@@ -276,10 +430,18 @@ int main()
 		randomizeMatrix(weightMatrixs[layer]);
 	}
 
-	std::vector<double> ans(1, 0);
+
+
+
+
+
+
+
+
+	/*std::vector<double> ans(1, 0);
 	std::vector<double> input = { 2,3,1,0,0,0 };
 	ans = NeuroCalc(input, weightMatrixs, biasMatrixs);
-	std::print("{}", ans);
+	std::print("{}", ans);*/
 
 
 
