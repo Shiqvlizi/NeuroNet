@@ -405,7 +405,16 @@ void backPropagate(std::vector<double> trainInput, std::vector<double> rightOutp
 }
 
 
-
+int countDigits(int n) {
+	if (n == 0) return 1;   // 0 有一位
+	int count = 0;
+	n = std::abs(n);        // 处理负数
+	while (n > 0) {
+		n /= 10;
+		++count;
+	}
+	return count;
+}
 
 
 
@@ -600,7 +609,7 @@ int main()
 
 	// 自由编辑
 
-	int casePerEpoch = 100;
+	int casePerEpoch = 1000;
 
 
 	// 此处是训练集
@@ -616,7 +625,16 @@ int main()
 	std::uniform_int_distribution<int> opDist(0, 3);
 	std::print("开始训练\n");
 
-	int epoch = 500;
+	// 隐藏光标
+	std::cout << "\033[?25l";
+
+	int epoch = 100;
+
+
+	int casePerEpochDigits = countDigits(casePerEpoch);
+	int epochDigits = countDigits(epoch);
+
+
 
 	for (int i = 0; i < epoch; i++)
 	{
@@ -675,15 +693,20 @@ int main()
 			// std::vector<double> neuroOutput = NeuroCalc(trainMatrixs_input[j], weightMatrixs, biasMatrixs);
 
 			backPropagate(vectorNorm(trainMatrixs_input[j]), logNormalize(trainMatrixs_output[j]));
+			std::print("\r进度: epoch: {: >{}} / {}, case: {: >{}} / {}\t\t", i + 1, epochDigits, epoch, j + 1, casePerEpochDigits, casePerEpoch);
 		}
 
 
-		std::print("\r进度: {} / {}", i + 1, epoch);
+		// std::print("\r进度: epoch: {} / {}, case: {} / {}		", i + 1, epoch, 0, casePerEpoch);
 	}
 
 
 
 	std::print("\n完成!\n");
+
+	// 显示光标
+	std::cout << "\033[?25h";
+
 	while (1)
 	{
 		std::print("input: ");
