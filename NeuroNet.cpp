@@ -219,6 +219,27 @@ matrix<double> transpose(const matrix<double>& x)
 
 }
 
+std::vector<double> matrixMultiplyTransposed(const matrix<double>& weight, const std::vector<double>& input)
+{
+	int rows = weight.size();
+	int cols = weight[0].size();
+	if (input.size() != rows)
+	{
+		throw std::runtime_error("矩阵维度不匹配：W^T * x 中 x 的长度必须等于 W 的行数");
+	}
+
+	std::vector<double> res(cols, 0.0);
+	for (int i = 0; i < rows; i++)
+	{
+		double x = input[i];
+		for (int j = 0; j < cols; j++)
+		{
+			res[j] += weight[i][j] * x;
+		}
+	}
+	return res;
+}
+
 double ReLU(double x)
 {
 	return std::max(0.0, x);
@@ -316,7 +337,7 @@ std::vector<double> NeuroCalc(
 }
 
 
-double loss(std::vector<double> NeuroNet_output, std::vector<double> train_output)
+double loss(const std::vector<double>& NeuroNet_output, const std::vector<double>& train_output)
 {
 	double loss = 0;
 	int length = NeuroNet_output.size();
@@ -328,51 +349,42 @@ double loss(std::vector<double> NeuroNet_output, std::vector<double> train_outpu
 }
 
 
-void backPropagate(std::vector<double> trainInput, std::vector<double> rightOutput)
+void backPropagate(const std::vector<double>& trainInput, const std::vector<double>& rightOutput)
 {
 
 	NeuroCalc(trainInput, weightMatrixs, biasMatrixs, rawInput, Input);
 
-
-	std::vector<double> delta = matrixMultiply_Num((2.0 / layerWidths.back()), matrixMinus(rawInput.back(), rightOutput));
-
 	int last = layerWidths.size() - 2;
-	const std::vector<double>& prevActLast = (last == 0) ? trainInput : Input[last - 1];
+	std::vector<std::vector<double>> deltas(notOutputLayers);
 
-
-	weightDiffMatrixs[last] = outerProduct(delta, prevActLast);
-
-
-	biasDiffMatrixs[last] = delta;
-
-
+	deltas[last].resize(layerWidths.back());
+	for (int i = 0; i < layerWidths.back(); i++)
+	{
+		deltas[last][i] = (2.0 / layerWidths.back()) * (rawInput.back()[i] - rightOutput[i]);
+	}
 
 	for (int i = last - 1; i >= 0; i--)
 	{
-
-		// 求 delta_i
-		delta = hadamardProduct(matrixMultiply(transpose(weightMatrixs[i + 1]), delta), dReLU(rawInput[i]));
-
-		const std::vector<double>& prevAct = (i == 0) ? trainInput : Input[i - 1];
-
-
-		weightDiffMatrixs[i] = outerProduct(delta, prevAct);
-
-
-		biasDiffMatrixs[i] = delta;
-
-
-
-
-
+		deltas[i] = matrixMultiplyTransposed(weightMatrixs[i + 1], deltas[i + 1]);
+		for (int j = 0; j < deltas[i].size(); j++)
+		{
+			deltas[i][j] *= dReLU(rawInput[i][j]);
+		}
 	}
 
 	for (int i = last; i >= 0; i--)
 	{
+		const std::vector<double>& prevAct = (i == 0) ? trainInput : Input[i - 1];
+		const std::vector<double>& delta = deltas[i];
 
-		weightMatrixs[i] = matrixMinus(weightMatrixs[i], matrixMultiply_Num(learnRate, weightDiffMatrixs[i]));
-
-		biasMatrixs[i] = matrixMinus(biasMatrixs[i], matrixMultiply_Num(learnRate, biasDiffMatrixs[i]));
+		for (int r = 0; r < weightMatrixs[i].size(); r++)
+		{
+			for (int c = 0; c < weightMatrixs[i][r].size(); c++)
+			{
+				weightMatrixs[i][r][c] -= learnRate * delta[r] * prevAct[c];
+			}
+			biasMatrixs[i][r] -= learnRate * delta[r];
+		}
 	}
 
 
@@ -426,7 +438,7 @@ int countDigits(int n) {
 
 
 // 这是一个把输入形如 "2*3" 的字符串转化为 [2, 3, 0, 0, 1, 0] 的函数
-std::vector<double> stringToVector(std::string input)
+std::vector<double> stringToVector(const std::string& input)
 {
 	std::vector<double> res(6, 0);
 	std::stringstream ss(input);
@@ -517,7 +529,7 @@ std::vector<double> inverseLogNormalize(const std::vector<double>& x)
 }
 
 // 这是一个把 [2, 3, 0, 0, 1, 0] 变成 6 的函数
-double clacVector(std::vector<double> input)
+double clacVector(const std::vector<double>& input)
 {
 	if (input[2] == 1)
 	{
@@ -540,15 +552,16 @@ double clacVector(std::vector<double> input)
 
 
 // 这是一个把 [2, 3, 0, 0, 1, 0] 的矩阵变成 [0.2, 0.3, 0, 0, 1, 0] 的函数
-std::vector<double> vectorNorm(std::vector<double> input)
+std::vector<double> vectorNorm(const std::vector<double>& input)
 {
-	input[0] /= 100;
-	input[1] /= 100;
-	return input;
+	std::vector<double> res = input;
+	res[0] /= 100;
+	res[1] /= 100;
+	return res;
 }
 
 // 这是一个提取输入矩阵的操作符的函数
-char vectorToOp(std::vector<double> input)
+char vectorToOp(const std::vector<double>& input)
 {
 	if (input[2] == 1)
 	{
@@ -628,7 +641,7 @@ int main()
 	// 隐藏光标
 	std::cout << "\033[?25l";
 
-	int epoch = 100;
+	int epoch = 1000;
 
 
 	int casePerEpochDigits = countDigits(casePerEpoch);
@@ -693,11 +706,11 @@ int main()
 			// std::vector<double> neuroOutput = NeuroCalc(trainMatrixs_input[j], weightMatrixs, biasMatrixs);
 
 			backPropagate(vectorNorm(trainMatrixs_input[j]), logNormalize(trainMatrixs_output[j]));
-			std::print("\r进度: epoch: {: >{}} / {}, case: {: >{}} / {}\t\t", i + 1, epochDigits, epoch, j + 1, casePerEpochDigits, casePerEpoch);
+			// std::print("\r进度: epoch: {: >{}} / {}, case: {: >{}} / {}\t\t", i + 1, epochDigits, epoch, j + 1, casePerEpochDigits, casePerEpoch);
 		}
 
 
-		// std::print("\r进度: epoch: {} / {}, case: {} / {}		", i + 1, epoch, 0, casePerEpoch);
+		std::print("\r进度: epoch: {: >{}} / {}", i + 1, epochDigits, epoch );
 	}
 
 
