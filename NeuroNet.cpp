@@ -609,7 +609,7 @@ int main()
 
 	// 自由编辑
 
-	int casePerEpoch = 1000;
+	int casePerEpoch = 10000;
 
 
 	// 此处是训练集
