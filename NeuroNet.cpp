@@ -866,7 +866,7 @@ int main()
 		}
 
 
-		std::print("\r进度: epoch: {: >{}} / {}", i + 1, epochDigits, epoch);
+		std::print("\repoch: {: >{}} / {}", i + 1, epochDigits, epoch);
 	}
 
 
@@ -875,7 +875,7 @@ int main()
 
 	double lossAfter = evaluateLoss(casePerEpoch);
 
-	std::print("\r样本量: {}, loss = {}\n", casePerEpoch * epoch, lossAfter);
+	std::print("\r样本量: {}, loss = {}\n", casePerEpoch, lossAfter);
 
 	// 显示光标
 	std::cout << "\033[?25h";
