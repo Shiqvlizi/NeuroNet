@@ -477,8 +477,9 @@ std::vector<double> vectorNorm(const std::vector<double>& input);
 // 自定义函数 自定义函数 自定义函数 自定义函数 自定义函数 自定义函数 自定义函数 自定义函数
 
 
-
-
+// 要训练的范围
+// [-limit, limit]
+double limit= 100;
 
 // 这是一个把输入形如 "2*3" 的字符串转化为 [2, 3, 0, 0, 1, 0] 的函数
 std::vector<double> stringToVector(const std::string& input)
@@ -530,7 +531,7 @@ double logNormalize(double x)
 {
 	double sign = (x >= 0.0 ? 1.0 : -1.0);
 
-	return sign * (log(abs(x) + 1.0)) / log(100.0);
+	return sign * (log(abs(x) + 1.0)) / log(limit);
 
 }
 
@@ -543,7 +544,7 @@ std::vector<double> logNormalize(const std::vector<double>& x)
 	{
 		double sign = (x[i] >= 0.0 ? 1.0 : -1.0);
 
-		res[i] = sign * (log(abs(x[i]) + 1.0)) / log(100.0);
+		res[i] = sign * (log(abs(x[i]) + 1.0)) / log(limit);
 	}
 	return res;
 
@@ -553,7 +554,7 @@ double inverseLogNormalize(double x)
 {
 	double sign = (x >= 0.0 ? 1.0 : -1.0);
 
-	return  sign * (pow(100.0, abs(x)) - 1.0);
+	return  sign * (pow(limit, abs(x)) - 1.0);
 }
 
 
@@ -566,7 +567,7 @@ std::vector<double> inverseLogNormalize(const std::vector<double>& x)
 	{
 		double sign = (x[i] >= 0.0 ? 1.0 : -1.0);
 
-		res[i] = sign * (pow(100.0, abs(x[i])) - 1.0);
+		res[i] = sign * (pow(limit, abs(x[i])) - 1.0);
 	}
 	return res;
 }
@@ -580,7 +581,7 @@ double evaluateLoss(int caseCount)
 
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<double> dist(-10, 10);
+	std::uniform_real_distribution<double> dist(-limit, limit);
 	std::uniform_int_distribution<int> opDist(0, 3);
 
 	double totalLoss = 0.0;
@@ -663,8 +664,8 @@ double clacVector(const std::vector<double>& input)
 std::vector<double> vectorNorm(const std::vector<double>& input)
 {
 	std::vector<double> res = input;
-	res[0] /= 100;
-	res[1] /= 100;
+	res[0] /= limit;
+	res[1] /= limit;
 	return res;
 }
 
@@ -740,7 +741,7 @@ int main()
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
-	std::uniform_real_distribution<double> dist(-10, 10);
+	std::uniform_real_distribution<double> dist(-limit, limit);
 	std::uniform_int_distribution<int> opDist(0, 3);
 
 
