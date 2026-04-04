@@ -622,7 +622,7 @@ int main()
 
 	// 自由编辑
 
-	int casePerEpoch = 10000;
+	int casePerEpoch = 20000;
 
 
 	// 此处是训练集
@@ -634,14 +634,14 @@ int main()
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
-	std::uniform_real_distribution<double> dist(-100, 100);
+	std::uniform_real_distribution<double> dist(-10, 10);
 	std::uniform_int_distribution<int> opDist(0, 3);
 	std::print("开始训练\n");
 
 	// 隐藏光标
 	std::cout << "\033[?25l";
 
-	int epoch = 1000;
+	int epoch = 3000;
 
 
 	int casePerEpochDigits = countDigits(casePerEpoch);
@@ -710,7 +710,7 @@ int main()
 		}
 
 
-		std::print("\r进度: epoch: {: >{}} / {}", i + 1, epochDigits, epoch );
+		std::print("\r进度: epoch: {: >{}} / {}", i + 1, epochDigits, epoch);
 	}
 
 
