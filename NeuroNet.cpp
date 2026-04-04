@@ -471,7 +471,7 @@ int countDigits(int n) {
 	return count;
 }
 
-
+std::vector<double> vectorNorm(const std::vector<double>& input);
 
 
 // 自定义函数 自定义函数 自定义函数 自定义函数 自定义函数 自定义函数 自定义函数 自定义函数
@@ -515,12 +515,12 @@ std::vector<double> stringToVector(const std::string& input)
 		}
 		else
 		{
-			std::cout << "不支持的运算符" << std::endl;
+			// std::cout << "不支持的运算符" << std::endl;
 		}
 	}
 	else
 	{
-		std::cout << "输入格式不正确" << std::endl;
+		// std::cout << "输入格式不正确" << std::endl;
 	}
 
 	return res;
@@ -569,6 +569,71 @@ std::vector<double> inverseLogNormalize(const std::vector<double>& x)
 		res[i] = sign * (pow(100.0, abs(x[i])) - 1.0);
 	}
 	return res;
+}
+
+double evaluateLoss(int caseCount)
+{
+	if (caseCount <= 0)
+	{
+		return 0.0;
+	}
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<double> dist(-10, 10);
+	std::uniform_int_distribution<int> opDist(0, 3);
+
+	double totalLoss = 0.0;
+	for (int i = 0; i < caseCount; i++)
+	{
+		double num1 = dist(gen);
+		double num2 = dist(gen);
+		int op = opDist(gen);
+
+		std::vector<double> inputVec(6, 0.0);
+		inputVec[0] = num1;
+		inputVec[1] = num2;
+
+		double ans = 0.0;
+		if (op == 0)
+		{
+			inputVec[2] = 1;
+			ans = num1 + num2;
+		}
+		else if (op == 1)
+		{
+			inputVec[3] = 1;
+			ans = num1 - num2;
+		}
+		else if (op == 2)
+		{
+			inputVec[4] = 1;
+			ans = num1 * num2;
+		}
+		else
+		{
+			while (num2 >= -1 && num2 <= 1)
+			{
+				num2 = dist(gen);
+			}
+			inputVec[1] = num2;
+			inputVec[5] = 1;
+			ans = num1 / num2;
+		}
+
+		std::vector<double> neuroAns = inverseLogNormalize(NeuroCalc(vectorNorm(inputVec), weightMatrixs, biasMatrixs));
+		std::vector<double> rightAns(1, ans);
+
+		double sampleLoss = 0.0;
+		const std::size_t outSize = std::min(neuroAns.size(), rightAns.size());
+		for (std::size_t j = 0; j < outSize; j++)
+		{
+			sampleLoss += std::pow(neuroAns[j] - rightAns[j], 2);
+		}
+		totalLoss += sampleLoss;
+	}
+
+	return totalLoss / caseCount;
 }
 
 // 这是一个把 [2, 3, 0, 0, 1, 0] 变成 6 的函数
@@ -654,8 +719,6 @@ int main()
 
 
 
-
-
 	/*std::vector<double> ans(1, 0);
 	std::vector<double> input = { 2,3,1,0,0,0 };
 	ans = NeuroCalc(input, weightMatrixs, biasMatrixs);
@@ -679,12 +742,61 @@ int main()
 
 	std::uniform_real_distribution<double> dist(-10, 10);
 	std::uniform_int_distribution<int> opDist(0, 3);
-	std::print("开始训练\n");
+
+
+
+	std::print("正在评估初始 loss...\n");
+	std::cout << "\033[?25l";
+
+
+	double loss = evaluateLoss(casePerEpoch);
+
+	// 显示光标
+	std::cout << "\033[?25h";
+
+	std::print("\r样本量: {}, loss = {}\n - 输入形如 1+1 的字符串开始计算\n - 输入 q 开始训练\n", casePerEpoch, loss);
+	while (1)
+	{
+		std::print("input: ");
+		std::string input;
+		std::getline(std::cin, input);  // 读取整行
+		if (input == "q")
+		{
+			break;
+		}
+		std::vector<double> inputVec = stringToVector(input);
+
+
+		std::vector<double> neuroAnsAfter = inverseLogNormalize(NeuroCalc(vectorNorm(inputVec), weightMatrixs, biasMatrixs));
+
+		double neuroRes = neuroAnsAfter[0];
+		double rightAns = clacVector(inputVec);
+
+
+		double delta = abs((rightAns - neuroRes) / rightAns) * 100;
+
+		std::print("\033[1A\r{} {} {} = {} | {} {:.2f}%\n", inputVec[0], vectorToOp(inputVec), inputVec[1], neuroRes, rightAns, delta);
+
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
+	std::print("\n开始训练\n");
 
 	// 隐藏光标
 	std::cout << "\033[?25l";
 
-	int epoch = 3000;
+	int epoch = 100;
 
 
 	int casePerEpochDigits = countDigits(casePerEpoch);
@@ -759,6 +871,10 @@ int main()
 
 
 	std::print("\n完成!\n");
+
+	double lossAfter = evaluateLoss(casePerEpoch);
+
+	std::print("\r样本量: {}, loss = {}\n", casePerEpoch * epoch, lossAfter);
 
 	// 显示光标
 	std::cout << "\033[?25h";
