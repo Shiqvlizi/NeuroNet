@@ -8,14 +8,18 @@
 #include <string>
 #include <sstream>
 
-
+// 定义矩阵模板
 template<typename T>
 using matrix = std::vector<std::vector<T>>;
 
 
-
+// 学习率, 决定着参数更新的每一步大小
+// 如果过大, 可能导致模型不收敛, 难以达到使 loss 函数很低的那个位置
+// 如果过小, 可能导致模型收敛速度缓慢
 double learnRate = 0.01;
 
+// 这里决定着模型结构: 输入层, 隐藏层, ..., 隐藏层, 输出层
+// 一般地, 层与层之间会有一层激活函数, 除了最后的隐藏层到输出层
 std::vector<int> layerWidths = { 6,64,64,32,1 }; // 输入, ..., 输出
 int notOutputLayers = layerWidths.size() - 1;
 int outputHeight = layerWidths[layerWidths.size() - 1];
@@ -23,7 +27,7 @@ int outputHeight = layerWidths[layerWidths.size() - 1];
 // weightMatrix[层][行][列]
 // weightMatrix[0], 是一个二维
 
-
+// 这里是会用到的矩阵
 std::vector<matrix<double>> weightMatrixs(notOutputLayers);
 std::vector<std::vector<double>> biasMatrixs(notOutputLayers);
 
@@ -35,6 +39,9 @@ std::vector<std::vector<double>> rawInput(notOutputLayers);
 std::vector<std::vector<double>> Input(notOutputLayers);
 
 
+
+// !!!![存疑]!!!!
+// 
 // 假设是第 l 层
 //
 //
@@ -42,13 +49,14 @@ std::vector<std::vector<double>> Input(notOutputLayers);
 //              weightMatrixs[l]           +   biasMatrixs[l]   ->  rawInput[l] ---		     weightMatrixs[l]                 +   ....
 //
 //
-
+// !!!![存疑]!!!!
 
 
 
 // 矩阵乘法
 
 // AB
+// 矩阵和矩阵的标准乘法
 matrix<double> matrixMultiply(const matrix<double>& a, const matrix<double>& b)
 {
 	int widthA = a[0].size(), heightA = a.size(), widthB = b[0].size(), heightB = b.size();
@@ -75,6 +83,7 @@ matrix<double> matrixMultiply(const matrix<double>& a, const matrix<double>& b)
 
 
 // Ax
+// 矩阵和向量的乘法
 std::vector<double> matrixMultiply(const matrix<double>& weight, const std::vector<double>& input)
 {
 	int  heightInput = input.size(), widthWeight = weight[0].size(), heightWeight = weight.size();
@@ -96,6 +105,8 @@ std::vector<double> matrixMultiply(const matrix<double>& weight, const std::vect
 	}
 }
 
+
+// 用于两个向量的相加
 std::vector<double> matrixAdd(const std::vector<double>& a, const std::vector<double>& b)
 {
 	int height = a.size();
@@ -106,6 +117,8 @@ std::vector<double> matrixAdd(const std::vector<double>& a, const std::vector<do
 	}
 	return res;
 }
+
+// 用于两个向量的相减
 std::vector<double> matrixMinus(const std::vector<double>& a, const std::vector<double>& b)
 {
 	int height = a.size();
@@ -118,6 +131,8 @@ std::vector<double> matrixMinus(const std::vector<double>& a, const std::vector<
 
 
 }
+
+// 用于两个矩阵的相减
 matrix<double> matrixMinus(const matrix<double>& a, const matrix<double>& b)
 {
 	int height = a.size();
@@ -133,6 +148,8 @@ matrix<double> matrixMinus(const matrix<double>& a, const matrix<double>& b)
 	}
 	return res;
 }
+
+// 用于向量的数乘
 std::vector<double> matrixMultiply_Num(double a, const std::vector<double>& b)
 {
 	int height = b.size();
@@ -144,7 +161,7 @@ std::vector<double> matrixMultiply_Num(double a, const std::vector<double>& b)
 	return res;
 }
 
-
+// 用于矩阵的数乘
 matrix<double> matrixMultiply_Num(double a, const matrix<double>& b)
 {
 	int height = b.size();
@@ -161,6 +178,7 @@ matrix<double> matrixMultiply_Num(double a, const matrix<double>& b)
 	return res;
 }
 
+// 两个向量的 "外积 (outer)", 不是 "叉乘 (cross)", 那是两个概念
 matrix<double> outerProduct(const std::vector<double>& a, const std::vector<double>& b)
 {
 	matrix<double> res(a.size(), std::vector<double>(b.size(), 0));
@@ -187,7 +205,7 @@ matrix<double> outerProduct(const std::vector<double>& a, const std::vector<doub
 //	return res;
 //}
 
-
+// 用于两个向量的逐元素乘积, 在神经网络中一般用于激活函数的求导矩阵参与的运算
 std::vector<double> hadamardProduct(const std::vector<double>& a, const std::vector<double>& b)
 {
 	std::vector<double> res(a.size(), 0);
@@ -200,7 +218,7 @@ std::vector<double> hadamardProduct(const std::vector<double>& a, const std::vec
 
 
 
-
+// 转置一个矩阵
 matrix<double> transpose(const matrix<double>& x)
 {
 
@@ -219,6 +237,7 @@ matrix<double> transpose(const matrix<double>& x)
 
 }
 
+// 输入 W, x, 输出 W^T * x
 std::vector<double> matrixMultiplyTransposed(const matrix<double>& weight, const std::vector<double>& input)
 {
 	int rows = weight.size();
@@ -240,6 +259,7 @@ std::vector<double> matrixMultiplyTransposed(const matrix<double>& weight, const
 	return res;
 }
 
+// 激活函数以及它们的求导
 double ReLU(double x)
 {
 	return std::max(0.0, x);
@@ -270,6 +290,8 @@ std::vector<double> dReLU(const std::vector<double>& x)
 	return res;
 }
 
+
+// 随机化一个矩阵
 void randomizeMatrix(matrix<double>& a)
 {
 	int height = a.size();
@@ -293,7 +315,7 @@ void randomizeMatrix(matrix<double>& a)
 
 
 
-
+// 当前模型的输出
 std::vector<double> NeuroCalc(
 	const std::vector<double>& input,
 	const std::vector<matrix<double>>& weightMatrixs,
@@ -312,6 +334,10 @@ std::vector<double> NeuroCalc(
 	return res;
 }
 
+
+// 当前模型的输出, 但是同时输出层与层之间的 z 和 a
+// z -> rawInput
+// a -> Input
 std::vector<double> NeuroCalc(
 	const std::vector<double>& input,
 	const std::vector<matrix<double>>& weightMatrixs,
@@ -336,7 +362,7 @@ std::vector<double> NeuroCalc(
 	return res;
 }
 
-
+// 损失函数, 这里是 loss 是 神经元输出和标准输出的差的平方的平均值
 double loss(const std::vector<double>& NeuroNet_output, const std::vector<double>& train_output)
 {
 	double loss = 0;
@@ -348,21 +374,36 @@ double loss(const std::vector<double>& NeuroNet_output, const std::vector<double
 	return loss;
 }
 
-
+// 反向传播函数
 void backPropagate(const std::vector<double>& trainInput, const std::vector<double>& rightOutput)
 {
-
+	// 先获取现在这个模型的 rawInput 和 Input, 因为之后梯度的计算要用
 	NeuroCalc(trainInput, weightMatrixs, biasMatrixs, rawInput, Input);
 
+	// 最后一个权重/偏置矩阵的索引
 	int last = layerWidths.size() - 2;
+
+	// 初始化 deltas 的大小
+	// 每一层的梯度计算, 都要依赖于 delta, 同时 delta 也是递归的核心
+	// delta[i] = ( W[i+1]^T * delta[i+1] ) $ ReLU' ( z[i] )
+	// delta 就是 dL/dz
+	// $ 表示逐个元素相乘 (至于为什么公式是这个, 数学, 矩阵微分之后的结果就是它)
+	// 此公式就建立了后一层和前一层的 delta 关系
+	// 然后
+	// biasDiff[i] = delta[i]
+	// weightDiff[i] = delta[i] * a[i-1]^T 
 	std::vector<std::vector<double>> deltas(notOutputLayers);
 
+
+	// 初始化 delta[L-1]
 	deltas[last].resize(layerWidths.back());
 	for (int i = 0; i < layerWidths.back(); i++)
 	{
 		deltas[last][i] = (2.0 / layerWidths.back()) * (rawInput.back()[i] - rightOutput[i]);
 	}
 
+
+	// 计算每个 delta
 	for (int i = last - 1; i >= 0; i--)
 	{
 		deltas[i] = matrixMultiplyTransposed(weightMatrixs[i + 1], deltas[i + 1]);
@@ -372,6 +413,8 @@ void backPropagate(const std::vector<double>& trainInput, const std::vector<doub
 		}
 	}
 
+
+	// 根据 delta 更新参数
 	for (int i = last; i >= 0; i--)
 	{
 		const std::vector<double>& prevAct = (i == 0) ? trainInput : Input[i - 1];
